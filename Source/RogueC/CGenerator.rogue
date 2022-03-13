@@ -111,12 +111,6 @@ augment
       endForEach
       writer.println
 
-      forEach (str in Program.unique_strings)
-        writer.print   "extern RogueString* "
-        writer.print   str
-        writer.println ';'
-      endForEach
-
     method Module.generate_c_code( writer:CWriter )
       if (types.count)
         forEach (type in types)
@@ -177,6 +171,13 @@ augment
       (forEach in modules).generate_c_class_structs( h_writer )
 
       (forEach in modules).generate_c_header( h_writer )
+
+      forEach (str in Program.unique_strings)
+        h_writer.print   "extern RogueString* "
+        h_writer.print   str
+        h_writer.println ';'
+      endForEach
+
       h_writer.close
 
       local c_writer = CWriter( File("Test.c") )
