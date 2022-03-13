@@ -97,7 +97,7 @@ class Parser : ParserCore
       if (filepath == "") throw marked_token.error( "Module path expected." )
       processed_tokens.add( marked_token.cloned(TokenType.STRING,filepath) )
       if (not _attribute_no_include)
-        Program.include( marked_token, filepath )
+        Program.include( marked_token, filepath, &is_optional )
       endIf
 
     method on_parsed_class
