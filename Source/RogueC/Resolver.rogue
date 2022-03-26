@@ -63,6 +63,12 @@ class Resolver : Visitor
       if (right_type is not result_type) cmd.right = validate( result_type.cmd_cast(right) )
       # on_validate() will be called after this method returns
 
+    method on_validate( cmd:CallProcedure )->Cmd
+      if (cmd.info.throws)
+        back_propagate_thrown_exception( cmd.info.throws )
+      endIf
+      return cmd
+
     method on( cmd:ContextAccess )->Cmd
       visit( cmd.args )
       return resolve_access( cmd.t, cmd.context, cmd.name, cmd.args )
@@ -88,6 +94,12 @@ class Resolver : Visitor
       endIf
 
       throw cmd.t.error( "No $->$ conversion is defined."(operand_type,cmd.to_type) )
+
+    method on_validate( cmd:CreateObject )->Cmd
+      if (cmd.m_init and cmd.m_init.throws)
+        back_propagate_thrown_exception( cmd.m_init.throws )
+      endIf
+      return cmd
 
     method on( cmd:ForEach )->Cmd
       local iterator = Iterator( cmd.t, cmd.statements, ControlType.FOR_EACH )
