@@ -47,7 +47,7 @@ class CGenerator : Visitor
       return null
 
     method on_visit( cmd:Cmd )
-      throw UnsupportedOperationError("CGenerator.on_visit($)"(cmd.type_name))
+      throw UnsupportedOperationError("CGenerator.on_visit($) [$]"(cmd.type_name,cmd))
 
     method on_visit( cmd:Access )
       #println StackTrace()
@@ -734,7 +734,7 @@ endClass
 augment
   METHODS
     method Cmd.write_print( writer:CWriter )
-      throw UnsupportedOperationError("$.write_print()"(type_name))
+      throw UnsupportedOperationError("[INTERNAL] $.write_print() [$]"(type_name,this))
 
     method LiteralInt32.write_print( writer:CWriter )
       writer.print ''printf( "%d", $ )'' (value)
