@@ -367,5 +367,8 @@ class Visitor
       cmd.context = visit(cmd.context)
       cmd.commands = visit(cmd.commands)
 
+    method on_visit_children( cmd:NamedArg )
+      cmd.value = visit(cmd.value)
+
 endClass
 

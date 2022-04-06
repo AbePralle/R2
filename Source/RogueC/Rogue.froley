@@ -1101,6 +1101,24 @@ parser
   produceList Args
 
 - arg
+  on '&'
+    on '!'
+      identifier
+      if (consume('=')) expression
+      else              createNull
+      produce NamedArg(name:String,value,zero="true":Logical)
+    elseOn '='
+      identifier
+      if (consume('=')) expression
+      else              createNull
+      produce NamedArg(name:String,value,forward="true":Logical)
+    elseOnOthers
+      identifier
+      if (consume('=')) expression
+      else              createNull
+      produce NamedArg(name:String,value)
+    endOn
+  endOn
   expression
 
 - statement
@@ -1572,6 +1590,7 @@ parser
   create ConvertToReal64(operand):Convert
   create CreateObject(of_type:Type,info:Local)
   create CreateCompound
+  create DefaultArg(operand):Unary
   #create DiscardResult(operand)
   create DummyInitialValue
   create ForEachControl(name:String,optional_at:ForEachAt,collection:ForEachCollection)
