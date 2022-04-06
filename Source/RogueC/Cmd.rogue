@@ -2195,3 +2195,21 @@ class DefaultArg : Unary
       return "DefaultArg($)" (%operand)
 
 endClass
+
+class AddAndAssignThisProperty : Cmd
+  PROPERTIES
+    info    : Property
+    operand : Cmd
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:AddAndAssignThisProperty )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+      if (existing.operand) operand = existing.operand.cloned
+
+    method description->String
+      return "AddAndAssignThisProperty($,$)" (%info,%operand)
+
+endClass

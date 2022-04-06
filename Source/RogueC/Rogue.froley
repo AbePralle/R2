@@ -1107,17 +1107,17 @@ parser
       if (consume('=')) expression
       else              createNull
       produce NamedArg(name:String,value,zero="true":Logical)
-    elseOn '='
-      identifier
-      if (consume('=')) expression
-      else              createNull
-      produce NamedArg(name:String,value,forward="true":Logical)
     elseOnOthers
       identifier
       if (consume('=')) expression
       else              createNull
       produce NamedArg(name:String,value)
     endOn
+  elseOn "&="
+    identifier
+    if (consume('=')) expression
+    else              createNull
+    produce NamedArg(name:String,value,zero="false":Logical,forward="true":Logical)
   endOn
   expression
 
@@ -1292,6 +1292,7 @@ parser
   op_and_assign
 
 - op_and_assign
+  logical_xor
   on "+=" expression -> AddAndAssign(target,operand):OpAndAssign
 #{
   #on "-=", expression -> SubtractAndAssign(target,operand):OpAndAssign
@@ -1304,7 +1305,6 @@ parser
   on ":>>:="  expression -> RightShiftAndAssign(target,operand):OpAndAssign
   on ":>>>:=" expression -> RightShiftXAndAssign(target,operand):OpAndAssign
 }#
-  logical_xor
 
 - logical_xor [binary]
   on "xor" -> LogicalXor
@@ -1570,6 +1570,7 @@ parser
 
 - additional_node_types
   create AddAndAssignLocal(info:Local,operand)
+  create AddAndAssignThisProperty(info:Property,operand)
   create CallDynamicMethod(context,args):CallProcedure
   create CallGlobalMethod(args):CallProcedure
   create CallProcedure(args)

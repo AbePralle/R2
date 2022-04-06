@@ -643,8 +643,16 @@ class Resolver : Visitor
       forEach (arg at i in args)
         if (arg instanceOf NamedArg)
           local named_arg = arg->(as NamedArg)
-          if (named_arg.value) arg = named_arg.value
-          else                 arg = LiteralLogical(named_arg.t,true)
+          if (named_arg.is_zero)
+            if (named_arg.value) throw named_arg.value.t.error( "Unexpected value." )
+            arg = LiteralLogical(named_arg.t,false)
+          elseIf (named_arg.is_forward)
+            arg = visit( Access(named_arg.t,named_arg.name,null) )
+          elseIf (named_arg.value)
+            arg = named_arg.value
+          else
+            arg = LiteralLogical(named_arg.t,true)
+          endIf
         elseIf (arg instanceOf DefaultArg)
           arg = visit( arg->(as DefaultArg).operand.cloned )
         endIf
@@ -700,7 +708,7 @@ class Resolver : Visitor
 
               mesg += sig
               mesg += " has arguments that are incompatible with the best candidate:\n\n"
-              mesg += "  " + Candidates[0].context_signature
+              mesg += "  " + Candidates[0].dev_signature
 
             others
               mesg = "Ambiguous call to "
@@ -711,7 +719,7 @@ class Resolver : Visitor
               mesg += sig
               mesg += ". Candidates:\n\n"
               forEach (m in Candidates)
-                mesg += "  $\n" (m.context_signature)
+                mesg += "  $\n" (m.dev_signature)
               endForEach
 
           endWhich
@@ -872,7 +880,13 @@ augment
         return resolver.validate( AddAndAssignLocal(t,v,operand) )
       endIf
 
-      throw t.error( "[TODO] Unimplemented assignment target." )
+      local p = resolver.this_type.properties[ name ]
+      if (p)
+        if (operand_type is not p.type) operand = resolver.validate(operand.cmd_convert_to(p.type))
+        return resolver.validate( AddAndAssignThisProperty(t,p,operand) )
+      endIf
+
+      throw t.error( "[TODO] Unimplemented assignment target (global property, Global.propery)." )
 endAugment
 
 # Assignment

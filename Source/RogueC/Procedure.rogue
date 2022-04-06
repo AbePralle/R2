@@ -103,11 +103,35 @@ class Procedure : Cmd
         return true
       endUse
 
-    method context_signature->String
-      return "$::$"(module_context,signature)
-
     method description->String
       return which{ signature || name }
+
+    method dev_signature->String
+      use builder = StringBuilder.pool
+        builder.print module_context
+        builder.print "::"
+        builder.print name
+        builder.print "("
+        forEach (param at i in parameters)
+          if (i > 0) builder.print ','
+          if (param.attributes.is_default_parameter and param.type is Program.type_Logical)
+            builder.print '&'
+            builder.print param.name
+          elseIf (param.initial_value)
+            builder.print '['
+            builder.print param.name
+            builder.print ':'
+            builder.print param.type
+            builder.print ']'
+          else
+            builder.print param.name
+            builder.print ':'
+            builder.print param.type
+          endIf
+        endForEach
+        builder.print ")"
+        return builder->String
+      endUse
 
     method has_parameter_named( name:String )->Logical
       return locate_parameter( name )?
@@ -154,6 +178,7 @@ class Procedure : Cmd
                 if (p.attributes.is_default_parameter)
                   if (p.initial_value) p.type = p.initial_value.type
                   if (not p.type) p.type = Program.type_Logical
+                  if (not p.initial_value) p.initial_value = p.type.cmd_default_value(p.t)
                 elseIf (this instanceOf Method)
                   local prop = this->(as Method).type_context.properties[p.name]
                   if (prop)
