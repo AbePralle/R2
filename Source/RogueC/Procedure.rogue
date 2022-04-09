@@ -62,7 +62,8 @@ class Procedure : Cmd
 
     method arrange_args( args:Cmd )->Logical
       use list = WorkList<<Cmd>>
-        list.expand_to_count( parameters.count )
+        loop (parameters.count) list.add( null->(as Cmd) )
+        #list.expand_to_count( parameters.count )
 
         # Put each named arg in the right spot
         forEach (arg in args)
