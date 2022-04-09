@@ -713,7 +713,12 @@ class Resolver : Visitor
       # And fill in default values
       proc.resolve
 
-      proc.arrange_args( args )
+      if (not proc.arrange_args(args))
+        trace args
+        trace proc.parameters
+        println StackTrace()
+        throw args.t.error( "[INTERNAL] Invalid procedure selected." )
+      endIf
 
       forEach (arg at i in args)
         if (arg instanceOf NamedArg)
@@ -1173,7 +1178,7 @@ augment
         if (m) return resolver.resolve_call( cmd.t, null, m, arg )
 
         m = resolver.find_procedure( cmd.t, type, null, op_method_name, null, &suppress_error )
-        if (m) return resolver.resolve_call( cmd.t, cmd.operand, m, arg )
+        if (m) return resolver.resolve_call( cmd.t, cmd.operand, m, null )
 
         use message = StringBuilder.pool
           message.print   "Operation $ is undefined on type $. "(cmd.symbol,type)
