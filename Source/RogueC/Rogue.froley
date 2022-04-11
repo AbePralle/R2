@@ -1289,7 +1289,7 @@ parser
     must_consume_eols
     multi_line_statements
     mustConsume "endUse"
-    produce Use(resources:UsedResources,statements)
+    produce Use(resources:UsedResources,statements):ControlStructure
   endOn
 
 - used_resource
