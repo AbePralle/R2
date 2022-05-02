@@ -1365,12 +1365,12 @@ parser
 - single_line_statements
   beginList
 
-  if (consume(EOL)) produceList Statements
+  if (consume(EOL) or (nextHasAttribute(structural) and not nextIs(';'))) produceList Statements
   statement
   while (consume(';'))
     if (not nextIs(EOL)) statement
   endWhile
-  must_consume_eols
+  consume_eols
 
   produceList Statements
 
