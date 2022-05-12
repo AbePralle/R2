@@ -17,7 +17,7 @@ class Exception [essential]
 
   GLOBAL METHODS
     method display( err:Exception ) [essential]
-      if (err) err.display
+      #if (err) err.display
 
 endClass
 

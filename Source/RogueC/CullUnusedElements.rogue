@@ -50,6 +50,12 @@ class CullUnusedElements : InspectionVisitor
       while (is_modified)
         is_modified = false
         Program.apply( this )
+
+        forEach (type in (forEach in Program.modules).types)
+          type.attributes.is_visiting = false
+          (forEach in type.global_methods).attributes.is_visiting = false
+          (forEach in type.methods).attributes.is_visiting = false
+        endForEach
       endWhile
 
       # Cull unused types and methods
@@ -95,9 +101,13 @@ class CullUnusedElements : InspectionVisitor
       endForEach
 
     method on_visit_type( type:Type ) [override]
-      if (type.attributes.is_used or type.attributes.is_aspect) return
-      type.attributes.is_used = true
-      is_modified = true
+      if (type.attributes.is_visiting or type.attributes.is_aspect) return
+      type.attributes.is_visiting = true
+
+      if (not type.attributes.is_used)
+        type.attributes.is_used = true
+        is_modified = true
+      endIf
 
       if (type.base_class) visit_type( type.base_class )
       if (type.aspects)
@@ -111,9 +121,12 @@ class CullUnusedElements : InspectionVisitor
         endTemporarily
       endIf
 
+      visit_type( (forEach in type.global_properties).type )
+      visit_type( (forEach in type.properties).type )
+
       temporarily this_type = type
         forEach (m in type.global_methods)
-          if ((m.attributes.is_essential or m.attributes.is_api) and not m.attributes.is_used)
+          if ((m.attributes.is_essential or m.attributes.is_api))
             temporarily this_module=m.module_context, this_procedure=m
               visit( m )
             endTemporarily
@@ -124,7 +137,7 @@ class CullUnusedElements : InspectionVisitor
       temporarily this_type = type
         forEach (m in type.methods)
           if (m.type_context is type)
-            if ((m.attributes.is_essential or m.attributes.is_api) and not m.attributes.is_used)
+            if ((m.attributes.is_essential or m.attributes.is_api))
               temporarily this_module=m.module_context, this_procedure=m
                 visit( m )
               endTemporarily
@@ -157,9 +170,13 @@ class CullUnusedElements : InspectionVisitor
       visit( cmd.of_type )
 
     method on( m:Procedure )->Logical
-      if (m.attributes.is_used or m.attributes.is_abstract) return false
-      m.attributes.is_used = true
-      is_modified = true
+      if (m.attributes.is_visiting or m.attributes.is_abstract) return false
+      m.attributes.is_visiting = true
+
+      if (not m.attributes.is_used)
+        m.attributes.is_used = true
+        is_modified = true
+      endIf
 
       visit_type( m.type_context )
       visit( (forEach in m.locals).type )
