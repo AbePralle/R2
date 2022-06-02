@@ -1757,7 +1757,6 @@ class Resolver : Visitor
         sig += '('
         forEach (arg at i in args)
           if (i > 0) sig += ','
-          local arg_type = arg.require_type
           if (arg instanceOf GenericFunctionDefinition)
             local def = arg->(as GenericFunctionDefinition)
             sig += "function("

@@ -326,6 +326,7 @@ class Parser : ParserCore
           endWhile
         endIf
         _cmd_stack.add( ImplicitFunctionGenerator.apply(arg,n) )
+        generic_fn_args_used = 0
       endIf
 
     method on_parsed_augment
