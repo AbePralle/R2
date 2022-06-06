@@ -80,7 +80,9 @@ class Module
     method find_template( t:Token, template_name:String, type_name:String, &extended_search )->Template
       # name:      e.g. List<<1>>
       # type_name: e.g. Int32[]
-      local mod = split_module_and_type( t, type_name )._1
+      local mod : Module
+      (mod,template_name) = split_module_and_type( t, template_name )
+      if (mod is null) mod = split_module_and_type( t, type_name )._1
 
       if (mod)
         # Explicit module given
@@ -103,6 +105,7 @@ class Module
     method must_find_template( t:Token, template_name:String, type_name:String, &extended_search )->Template
       local result = find_template( t, template_name, type_name, &=extended_search )
       if (result) return result
+
       local (mod,type) = split_module_and_type( t, type_name )
       if (mod is null) mod = this
       throw t.error( "Reference to undefined type '$::$'."(mod,type) )
