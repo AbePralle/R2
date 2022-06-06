@@ -1443,6 +1443,7 @@ class Resolver : Visitor
     method resolve_access( t:Token, context:Cmd, name:String, args:Cmd, &suppress_error )->Cmd
       local m : Module
       (m,name) = this_module.split_module_and_type( t, name )
+      if (not m) m = this_module
 
       temporarily this_module = m
 
@@ -1561,6 +1562,7 @@ class Resolver : Visitor
     method resolve_call( t:Token, type_context:Type, context:Cmd, name:String, args:Cmd, &suppress_error )->Cmd
       local m : Module
       (m,name) = this_module.split_module_and_type( t, name )
+      if (not m) m = this_module
 
       temporarily this_module = m
 
