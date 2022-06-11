@@ -235,7 +235,7 @@ class Timestamp( value=System.time_ms:Int64 ) [compound]
       return result
 
     method millisecond->Int32
-      return Int32( (value * 1000) % 1000 )
+      return Int32( value % 1000 )
 
     method minute->Int32
       local result : Int32

@@ -11,7 +11,7 @@
 class Time( total_ms:Int64 ) [compound]
   GLOBAL METHODS
     method create( hour:Int32, minute:Int32, second=0:Int32, millisecond=0:Int32 )->Time
-      return Time( ((hour*3600 + minute*60 + second) * 1000 + millisecond) / 1000.0 )
+      return Time( (hour*3600 + minute*60 + second) * 1000 + millisecond )
 
     method create( text:String )->Time
       local st = text.to_lowercase
