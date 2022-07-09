@@ -244,6 +244,9 @@ augment
     method GetLocal.is_anchored->Logical
       return info.is_anchored
 
+    method InlineAssignment.is_anchored->Logical
+      return true
+
     method LiteralString.is_anchored->Logical
       return true
 

@@ -283,8 +283,7 @@ class Program [singleton]
 
     method type_Value->Type
       if (@type_Value) return @type_Value
-      type_Value = Type( t, "Value", Attribute.COMPOUND )
-      @type_Value.ensure_definition
+      type_Value = default_module.must_find_type( t, "Value" )
       return @type_Value
 
 endClass
