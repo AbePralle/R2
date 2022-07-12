@@ -7,6 +7,16 @@ class File( filepath:String ) [compound]
                   |  #include <dirent.h>
                   |#endif
 
+  GLOBAL METHODS
+    method operator+( left:String, right:File )->File
+      return File( left + right.filepath )
+
+    method operator+( left:File, right:String )->File
+      return File( left.filepath + right )
+
+    method operator+( left:File, right:File )->File
+      return File( left.filepath + right.filepath )
+
   METHODS
     method abs->File
       if (not this.exists)
