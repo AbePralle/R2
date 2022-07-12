@@ -403,7 +403,7 @@ class File( filepath:String ) [compound]
     method is_newer_than( other:File )->Logical
       if (not this.exists)  return false
       if (not other.exists) return true
-      return (this.timestamp > other.timestamp)
+      return (this.timestamp_ms > other.timestamp_ms)
 
       #{
     method is_valid_utf8( filepath:String )->Logical
