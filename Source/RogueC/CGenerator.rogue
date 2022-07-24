@@ -1025,6 +1025,8 @@ class CGenerator : Visitor
       cmd.type = visit(cmd.type)->(as Type)
 
     method on_visit( cmd:LocalDeclaration )
+      local needs_semicolon = false
+
       local v = cmd.info
       if (not Program.gc_auto)
         writer.print( v.type.c_ref_name ).print( ' ' )
@@ -1034,16 +1036,17 @@ class CGenerator : Visitor
           if (v.type.is_compound) writer.print "{}"
           else                    writer.print "0"
         endIf
+        needs_semicolon = true
       endIf
 
       if (Program.gc_auto)
         if (v.type.is_reference)
-          writer.println ';'
+          if (needs_semicolon) writer.println ';'
           writer.print   "RogueType_local_pointer_stack_add( &TypeRogueObject, &"
           writer.print   v.c_name
           writer.print   " )"
         elseIf (v.type.contains_reference)
-          writer.println ';'
+          if (needs_semicolon) writer.println ';'
           writer.print   "RogueType_local_pointer_stack_add( &Type"
           writer.print   v.type.c_name
           writer.print   ", &"
@@ -2311,7 +2314,7 @@ augment
 
         contingent
           forEach (p in properties)
-            sufficient (p.type.is_reference)
+            sufficient (p.type.is_reference or p.type.contains_reference)
           endForEach
           escapeContingent
 
@@ -2348,6 +2351,32 @@ augment
                             |{
                             |  if ((ref = *(++cursor)) && ref->__refcount >= 0) ref->__type->fn_gc_trace(ref);
                             |}
+
+          elseIf (element_type and element_type.contains_reference)
+            writer.println
+            # RogueValue* cursor = ((RogueValue*)(((RogueValueList*)THIS)->data)) - 1;
+            writer.print   element_type.c_name
+            writer.print   "* cursor = (("
+            writer.print   element_type.c_name
+            writer.print   "*)((("
+            writer.print   c_name
+            writer.println "*)THIS)->data)) - 1;"
+            writer.print   "int n = ((int)(("
+            writer.print   c_name
+            writer.println "*)THIS)->capacity);"
+
+            # while (--n >=0)
+            # {
+            #   if ((ref = (RogueObject*)((*(++cursor)).object)) && ref->__refcount >= 0) ref->__type->fn_gc_trace(ref);
+            # }
+            writer.println "while (--n >=0)"
+            writer.println "{"
+            use path = WorkList<<String>>
+              path.add( "  if ((ref = (RogueObject*)((*(++cursor))" )
+              writer.print_gc_checks( path, element_type )
+            endUse
+            writer.println "}"
+
           endIf
 
         endContingent
