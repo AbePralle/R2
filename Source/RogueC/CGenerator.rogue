@@ -624,18 +624,26 @@ class CGenerator : Visitor
         else                                        writer.println "0;"
       endIf
 
-      # Declare all local variables.
-      #if (this_procedure.locals.count)
-      #  forEach (v in this_procedure.locals)
-      #    writer.print( v.type.c_ref_name ).print( ' ' )
-      #    writer.print( v.c_name )
-      #    writer.print( " = " )
-      #    if (v.type.is_compound) writer.print "{}"
-      #    else                    writer.print "0"
-      #    writer.println( ';' )
-      #  endForEach
-      #  writer.println
-      #endIf
+      if (Program.gc_auto)
+        # Declare all local variables.
+        if (this_procedure.locals.count)
+          forEach (v in this_procedure.locals)
+            writer.print( v.type.c_ref_name ).print( ' ' )
+            writer.print( v.c_name )
+            writer.print( " = " )
+            if (v.type.is_compound) writer.print "{}"
+            else                    writer.print "0"
+            writer.println( ';' )
+
+            # Add a '(void)varname;' to prevent unused variable warnings due to Rogue variables
+            # within C #ifdef blocks.
+            writer.print   "(void)"
+            writer.print   v.c_name
+            writer.println ';'
+          endForEach
+          writer.println
+        endIf
+      endIf
 
       if (this_procedure.requires_cleanup and Program.gc_auto)
         use tracked_local_types = WorkList<<Type>>
@@ -1018,12 +1026,14 @@ class CGenerator : Visitor
 
     method on_visit( cmd:LocalDeclaration )
       local v = cmd.info
-      writer.print( v.type.c_ref_name ).print( ' ' )
-      writer.print( v.c_name )
-      if (not v.initial_value or v.type.is_reference or v.type.contains_reference)
-        writer.print( " = " )
-        if (v.type.is_compound) writer.print "{}"
-        else                    writer.print "0"
+      if (not Program.gc_auto)
+        writer.print( v.type.c_ref_name ).print( ' ' )
+        writer.print( v.c_name )
+        if (not v.initial_value or v.type.is_reference or v.type.contains_reference)
+          writer.print( " = " )
+          if (v.type.is_compound) writer.print "{}"
+          else                    writer.print "0"
+        endIf
       endIf
 
       if (Program.gc_auto)
