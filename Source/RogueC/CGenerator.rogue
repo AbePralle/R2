@@ -29,7 +29,7 @@ class CGenerator : Visitor
             list.add( Program.type_Object )
             Program.type_Object.attributes.is_collected = true
           endIf
-        elseIf (p.type.is_compound and p.type.contains_reference and not p.type.attributes.is_collected)
+        elseIf (p.type.is_compound and p.type.contains_reference and not p.is_anchored and not p.type.attributes.is_collected)
           list.add( p.type )
           p.type.attributes.is_collected = true
         endIf
@@ -47,14 +47,26 @@ class CGenerator : Visitor
 
       (forEach in list).attributes.is_collected = false  # reset
 
-    method dispatch_exception( t:Token )
+    method dispatch_exception( t:Token, header=null:String )
+      if (header) writer.print(header)
+
       forEach (control in control_stack step -1)
         if (control.catches_exception or control.requires_cleanup)
-          writer.print "goto "
+          writer.print " goto "
           writer.print control.c_escape_label(this)
+          writer.println ';'
           return
         endIf
       endForEach
+
+      if (Program.stack_trace or this_procedure.requires_cleanup)
+        writer.println
+        writer.println '{'
+        writer.indent += 2
+        print_procedure_cleanup
+      else
+        writer.print ' '
+      endIf
 
       writer.print "return"
       local return_type = this_procedure.return_type
@@ -65,6 +77,12 @@ class CGenerator : Visitor
         else
           visit( return_type.cmd_default_value(t) )
         endIf
+      endIf
+      writer.println ";"
+
+      if (Program.stack_trace or this_procedure.requires_cleanup)
+        writer.indent -= 2
+        writer.println '}'
       endIf
 
     method escape_label( control_type=ControlType.UNDEFINED:ControlType )->String
@@ -1213,9 +1231,7 @@ class CGenerator : Visitor
       endIf
 
     method on_visit( cmd:ReturnOnException )
-      writer.print "if (Rogue_exception) "
-      dispatch_exception( cmd.t )
-      writer.println ';'
+      dispatch_exception( cmd.t, "if (Rogue_exception)" )
 
     method on_visit( cmd:SetGlobalProperty )
       writer.print( cmd.info.c_name )
@@ -1345,8 +1361,6 @@ class CGenerator : Visitor
       writer.print   "Rogue_exception = (RogueObject*)"
       visit( cmd.exception )
       writer.println ';'
-      writer.println "Rogue_call_stack_pop();"
-      print_procedure_cleanup
       dispatch_exception( cmd.t )
 
     method on_visit( cmd:Try )
@@ -1508,6 +1522,9 @@ augment
       return false
 
     method ReturnOnException.needs_semicolon->Logical
+      return false
+
+    method Throw.needs_semicolon->Logical
       return false
 
     method Type.generate_c_native_headers( writer:CWriter )
@@ -2454,9 +2471,7 @@ augment
       endIf
 
       if (exception_passthrough)
-        cgen.writer.print "if (Rogue_exception) "
-        cgen.dispatch_exception( t )
-        cgen.writer.println ';'
+        cgen.dispatch_exception( t, "if (Rogue_exception)" )
       endIf
 
     method CleanupBlock.on_end_scope( cgen:CGenerator )
@@ -2472,9 +2487,7 @@ augment
       endIf
 
       if (exception_passthrough)
-        writer.print "if (Rogue_exception) "
-        cgen.dispatch_exception( t )
-        writer.println ';'
+        cgen.dispatch_exception( t, "if (Rogue_exception)" )
       endIf
 
     method Try.on_end_scope( cgen:CGenerator )
@@ -2516,13 +2529,7 @@ augment
             writer.println '}'
           endForEach
 
-          writer.println "else"
-          writer.println '{'
-          writer.indent += 2
-          cgen.dispatch_exception( t )
-          writer.println ';'
-          writer.indent -= 2
-          writer.println '}'
+          cgen.dispatch_exception( t, "else" )
 
           writer.indent -= 2
           writer.println '}'
