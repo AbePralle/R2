@@ -262,8 +262,12 @@ class Type : Cmd
 
     method add( m:Method )
       local existing = methods[m.signature]
-      if (existing and existing.type_context is m.type_context)
-        throw m.t.error( "Method $ is already defined."(m.dev_signature) )
+      if (existing)
+        if (existing.type_context is m.type_context)
+          throw m.t.error( "Method $ is already defined."(m.dev_signature) )
+        else
+          m.overridden_method = existing
+        endIf
       endIf
       methods[ m.signature ] = m
 
@@ -1592,7 +1596,7 @@ class Type : Cmd
         if (not methods.contains(sig))
           if (not instantiate_overriding_template(m))
             if (m.attributes.is_propagated)
-              methods[sig] = m.propagated_to( type )
+              methods[sig] = m.propagated_to( this )
             else
               methods[sig] = m
             endIf
@@ -1604,7 +1608,8 @@ class Type : Cmd
     method instantiate_overriding_template( m:Method )->Logical
       # Instantiate an overriding method template if it exists
       local group = method_templates[ "$<<$>>"(m.method_template.name,m.method_template.placeholders.count) ]
-      if (not group) return false
+      if (not group or group.is_empty) return false
+      if (group.first.type_context is not this) return false
 
       forEach (template in group)
         template.instantiate( m.template_args )
