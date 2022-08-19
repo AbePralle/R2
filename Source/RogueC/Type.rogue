@@ -267,6 +267,7 @@ class Type : Cmd
           throw m.t.error( "Method $ is already defined."(m.dev_signature) )
         else
           m.overridden_method = existing
+          existing.attributes.is_overridden = true
         endIf
       endIf
       methods[ m.signature ] = m
@@ -1603,6 +1604,21 @@ class Type : Cmd
             (forEach in extended_types).inject_inherited_method( m )
           endIf
         endIf
+      endIf
+
+    method instantiate_object_method_templates( t_name:String, template_args:TemplateArgs )
+      # Drill down to start at most general ancestor class with a compatible method template
+      local root_type : Type
+      if (this.method_templates.contains(t_name)) root_type = this
+
+      local base_type = base_class
+      while (base_type)
+        if (base_type.method_templates.contains(t_name)) root_type = this
+        base_type .= base_class
+      endWhile
+
+      if (root_type)
+        (forEach in root_type.method_templates[t_name]).instantiate( template_args )
       endIf
 
     method instantiate_overriding_template( m:Method )->Logical
